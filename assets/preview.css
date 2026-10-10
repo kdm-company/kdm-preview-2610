@@ -1,0 +1,310 @@
+/* =========================================================
+   確認用プレビュー
+   base.css（現行デザイン＝V1）の上に、ご指示の項目ごとの調整を重ねる。
+   各ブロックの見出しの番号＝ご指示の番号。ブロック単位で外せば元に戻る
+   ========================================================= */
+:root{
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --g-navy:linear-gradient(160deg,#0B1F33 0%,#11304B 100%);
+  --g-tint:linear-gradient(180deg,#F6F9FA 0%,#EDF2F5 100%);
+}
+body{overflow-x:clip}
+
+/* ---------- ヘッダー：ドロップダウン（元サイトの階層を維持） ---------- */
+.gnav__menu li{position:relative}
+.gnav__sub{position:absolute;top:100%;left:8px;z-index:20;min-width:200px;margin:0;padding:8px 0;list-style:none;background:#fff;border:1px solid var(--c-line);box-shadow:0 16px 36px -12px rgba(11,31,51,.22);opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .25s,transform .25s var(--ease),visibility .25s}
+.gnav__sub a{display:block;padding:10px 20px;font-size:14px;font-weight:500;letter-spacing:.06em;line-height:1.6;color:var(--c-navy);transition:background .2s,color .2s}
+.gnav__sub a:hover,.gnav__sub a:focus-visible{background:var(--c-tint);color:var(--c-brand)}
+.gnav__menu li.has-sub:hover .gnav__sub,.gnav__menu li.has-sub:focus-within .gnav__sub{opacity:1;visibility:visible;transform:none}
+.gnav__menu li.is-current>.gnav__link{color:var(--c-brand)}
+@media (max-width:1080px){
+  .gnav__sub{position:static;min-width:0;padding:0 0 10px 4px;background:none;border:0;box-shadow:none;opacity:1;visibility:visible;transform:none}
+  .gnav__sub a{padding:9px 0 9px 18px;font-size:14px;color:rgba(255,255,255,.78);border-left:1px solid rgba(255,255,255,.18)}
+  .gnav__sub a:hover{background:none;color:#fff}
+  .gnav__menu li{opacity:0;transform:translateX(18px);transition:opacity .4s var(--ease),transform .4s var(--ease);transition-delay:calc(var(--i,0) * 60ms + 120ms)}
+  .gnav.is-open .gnav__menu li{opacity:1;transform:none}
+}
+.gnav__cta a{position:relative;overflow:hidden;isolation:isolate}
+.gnav__cta a::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--c-navy);transform:scaleX(0);transform-origin:0 50%;transition:transform .45s var(--ease)}
+.gnav__cta a:hover{background:var(--c-brand)}
+.gnav__cta a:hover::before{transform:scaleX(1)}
+
+/* ---------- 04 ヒーロー（V1。装飾を控えめに） ---------- */
+.hero__catch{letter-spacing:.18em;text-shadow:0 2px 18px rgba(6,10,16,.38)}
+.hero__lead{letter-spacing:.1em;text-shadow:0 1px 10px rgba(6,10,16,.4)}
+
+/* ---------- 05 お探しの情報はこちら（V3） ---------- */
+.purpose__links a::after,.post-card::after,.work::after,.prod-card::after,.app-card::after{content:"";position:absolute;inset:-1px;pointer-events:none;--b:var(--c-brand);--s:12px;
+  background:
+    linear-gradient(var(--b),var(--b)) top left/var(--s) 1.5px no-repeat,
+    linear-gradient(var(--b),var(--b)) top left/1.5px var(--s) no-repeat,
+    linear-gradient(var(--b),var(--b)) top right/var(--s) 1.5px no-repeat,
+    linear-gradient(var(--b),var(--b)) top right/1.5px var(--s) no-repeat,
+    linear-gradient(var(--b),var(--b)) bottom left/var(--s) 1.5px no-repeat,
+    linear-gradient(var(--b),var(--b)) bottom left/1.5px var(--s) no-repeat,
+    linear-gradient(var(--b),var(--b)) bottom right/var(--s) 1.5px no-repeat,
+    linear-gradient(var(--b),var(--b)) bottom right/1.5px var(--s) no-repeat;
+  opacity:0;transition:opacity .3s var(--ease),inset .3s var(--ease)}
+.purpose__links a:hover::after,.purpose__links a:focus-visible::after,.post-card:hover::after,.work:hover::after,.prod-card:hover::after,.app-card:hover::after{opacity:1;inset:-7px}
+.purpose__links a{transition:background .3s,transform .3s var(--ease)}
+.purpose__links a:hover{background:#F6F9FA;transform:translateY(-3px)}
+.purpose__links a:active{transform:translateY(-1px) scale(.99)}
+.purpose__links b{top:50%;right:14px;width:30px;height:30px;margin-top:-15px;border:1px solid var(--c-line);transition:background .3s,border-color .3s}
+.purpose__links b::after{content:"";position:absolute;left:9px;top:10px;width:8px;height:8px;border-top:1.5px solid var(--c-brand);border-right:1.5px solid var(--c-brand);transform:rotate(45deg);transition:border-color .3s}
+.purpose__links a:hover b{transform:none;background:var(--c-brand);border-color:var(--c-brand)}
+.purpose__links a:hover b::after{border-color:#fff}
+@media (max-width:767px){.purpose__links b{right:4px}}
+
+/* ---------- 06 私たちの役割（V1。見出し・本文の2階層） ---------- */
+.slg{background:var(--g-tint)}
+.slg::before{background-image:var(--photo)}
+.slg__main{margin:0 auto;font-size:clamp(24px,2.6vw,32px);line-height:1.75;letter-spacing:.08em}
+.slg__body{max-width:760px;margin:36px auto 0;display:grid;gap:14px}
+.slg__body p{font-size:15.5px;line-height:2.1;color:var(--c-text-sub)}
+@media (max-width:767px){.slg__main{font-size:22px}.slg__body{margin-top:24px}.slg__body p{font-size:14.5px}}
+
+/* ---------- 07 事業内容（V1の3カラム。配色を整え、番号の入れ子をなくす） ---------- */
+.svc__cont{background:var(--g-tint)}
+.svc__head,.svc__item:nth-child(2) .svc__head,.svc__item:nth-child(3) .svc__head{background:var(--g-navy)}
+.svc__no,.svc__item:nth-child(3) .svc__no{font-size:11px;letter-spacing:.26em;color:var(--c-brand-lt)}
+.svc__no::after{background:rgba(159,211,218,.35)}
+.svc__steps{counter-reset:none}
+.svc__steps li{gap:0;padding:12px 0}
+.svc__steps li::before{content:none}
+.svc__close{background:#fff;border:1px solid var(--c-line);color:var(--c-text-sub)}
+
+/* ---------- 08 技術・製品（V3を簡潔に） ---------- */
+.works{perspective:1100px}
+.work{position:relative;transform:rotateX(var(--rx,0)) rotateY(var(--ry,0));transition:transform .5s var(--ease)}
+.work.is-tilting{transition:transform .08s linear}
+.work__media{position:relative}
+.work__media::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.6) 48%,transparent 62%);background-size:250% 100%;background-position:var(--sx,120%) 0;mix-blend-mode:soft-light}
+.work__ttl{margin-top:20px}
+.work__spec{margin:-4px 0 12px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--c-brand-dk);font-variant-numeric:tabular-nums}
+.ef-flow{fill:none;stroke:var(--c-sun);stroke-width:2.4;stroke-dasharray:6 10}
+@media (prefers-reduced-motion:no-preference){.ef-flow{animation:pvflow 1.2s linear infinite}}
+@keyframes pvflow{to{stroke-dashoffset:-32}}
+
+/* ---------- 09 実績・提携（V1をさらに簡潔に） ---------- */
+.rec__box{padding:34px 36px 22px;border-top:0;border:1px solid var(--c-line-weak)}
+.rec__ttl{padding-bottom:14px;margin-bottom:4px;border-bottom:1px solid var(--c-navy)}
+.rec__list li{display:grid;grid-template-columns:80px minmax(0,1fr);gap:18px;padding:16px 0}
+.rec__date{width:auto;padding-top:2px;font-size:13px;font-weight:700;color:var(--c-brand-dk);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.rec__txt b{font-size:15.5px}
+@media (max-width:900px){.rec__box{padding:24px 20px 10px}.rec__list li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- 10 お知らせ（V3） ---------- */
+.post-card{position:relative}
+
+/* ---------- 11 会社情報（V3ベースで整える） ---------- */
+.about{background:linear-gradient(180deg,#fff 0%,#F6F9FA 100%)}
+.about__layout{gap:96px;padding-top:72px;border-top-color:var(--c-line-weak)}
+.about__layout::before{background:linear-gradient(var(--c-line),transparent)}
+.about__eyebrow{letter-spacing:.24em}
+.about__intro h2{font-size:clamp(30px,3.2vw,40px);line-height:1.7;letter-spacing:.1em}
+.about__story p{font-size:15.5px;color:var(--c-text-sub)}
+.about__facts{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.3fr);gap:0;margin:32px 0 12px;padding:0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)}
+.about__facts div{padding:18px 18px 18px 0}
+.about__facts div+div{padding-left:18px;border-left:1px solid var(--c-line-weak)}
+.about__facts dt{font-size:11.5px;font-weight:700;letter-spacing:.14em;color:var(--c-text-mute)}
+.about__facts dd{margin:6px 0 0;font-size:16.5px;font-weight:700;color:var(--c-navy);word-break:auto-phrase}
+.about__link{transition:padding .3s var(--ease),color .3s}
+.about__link:hover{padding-left:8px}
+@media (max-width:900px){.about__layout{gap:32px;padding-top:40px}.about__facts{grid-template-columns:1fr}.about__facts div+div{padding-left:0;border-left:0;border-top:1px solid var(--c-line-weak)}}
+
+/* ---------- 12 お問い合わせ（格子＋薄い写真） ---------- */
+.cta{isolation:isolate;overflow:hidden;background:linear-gradient(180deg,rgba(11,31,51,.93) 0%,rgba(8,24,39,.95) 100%),var(--photo) center 62%/cover no-repeat}
+.cta::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(159,211,218,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(159,211,218,.08) 1px,transparent 1px);background-size:48px 48px;
+  -webkit-mask-image:radial-gradient(ellipse 65% 70% at 50% 50%,#000 25%,transparent 75%);mask-image:radial-gradient(ellipse 65% 70% at 50% 50%,#000 25%,transparent 75%)}
+.cta__ttl-en{letter-spacing:.3em}
+.cta__phone{transition:box-shadow .35s,transform .15s}
+.cta__phone:hover{box-shadow:0 0 0 4px rgba(159,211,218,.3),0 0 36px rgba(18,164,181,.3)}
+.cta__phone:active{transform:scale(.98)}
+.cta__more{margin-top:22px;font-size:14px}
+.cta__more a{color:#D5DEE5;border-bottom:1px solid rgba(213,222,229,.4);padding-bottom:3px}
+.cta__more a:hover{color:#fff;border-color:#fff}
+
+/* ---------- 13・14 背景のグラデーション／フッター前後の線をなくす ---------- */
+.sec--tint{background:var(--g-tint)}
+.ftr{background:linear-gradient(180deg,#0A1C2E 0%,#081827 55%,#06121F 100%);border-top:0;box-shadow:none}
+.ftr__bar{margin-top:44px;border-top:0;background:rgba(0,0,0,.16)}
+.ftr__addr a{color:#fff}
+
+/* ---------- ボタンの手応え ---------- */
+.btn{position:relative;overflow:hidden;isolation:isolate}
+.btn::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--c-brand);transform:scaleY(0);transform-origin:50% 100%;transition:transform .35s var(--ease)}
+.btn:hover{background:transparent}
+.btn:hover::before{transform:none}
+.btn:active,.card-link:active{transform:scale(.97)}
+
+/* =========================================================
+   下層ページ
+   ========================================================= */
+.page-head{background:var(--g-navy)}
+.page-head::before{background-image:var(--photo);opacity:.16}
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:40px}
+.subnav a{display:inline-flex;align-items:center;min-height:42px;padding:0 18px;border:1px solid var(--c-line);font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--c-text-sub);background:#fff;transition:border-color .2s,color .2s}
+.subnav a:hover{border-color:var(--c-brand);color:var(--c-brand)}
+.subnav a[aria-current="page"]{background:var(--c-navy);border-color:var(--c-navy);color:#fff}
+.sub-lead{max-width:46em;margin-bottom:48px;font-size:15.5px;line-height:2.05;color:var(--c-text-sub)}
+.sub-ttl{display:flex;align-items:center;gap:14px;margin:64px 0 24px;font-size:20px;font-weight:700;letter-spacing:.08em;color:var(--c-navy)}
+.sub-ttl::before{content:"";width:28px;height:1px;background:var(--c-brand)}
+.sub-lead+.sub-ttl,.subnav+.sub-ttl{margin-top:0}
+.sub-note{margin-top:16px;font-size:13px;line-height:1.9;color:var(--c-text-mute)}
+@media (max-width:767px){.sub-ttl{margin:48px 0 18px;font-size:18px}.subnav{margin-bottom:28px}.sub-lead{margin-bottom:32px;font-size:14.5px}}
+
+/* 製品カード */
+.prods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;perspective:1100px}
+.prod-card{display:flex;flex-direction:column;padding-bottom:6px}
+.prod-card__cat{margin-top:18px;font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--c-brand)}
+.prod-card .work__ttl{margin:6px 0 6px;font-size:16.5px}
+.prod-card__spec{font-size:13.5px;color:var(--c-text-sub);font-variant-numeric:tabular-nums}
+.prod-card:hover .work__ttl{color:var(--c-brand-dk)}
+@media (max-width:900px){.prods{grid-template-columns:1fr 1fr;gap:20px}}
+@media (max-width:560px){.prods{grid-template-columns:1fr}}
+.wide-link{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 30px;background:var(--g-tint);border:1px solid var(--c-line-weak);transition:border-color .3s}
+.wide-link b{display:block;font-size:17px;color:var(--c-navy)}
+.wide-link small{display:block;margin-top:4px;font-size:13.5px;color:var(--c-text-sub)}
+.wide-link i{font-style:normal;font-size:20px;color:var(--c-brand);transition:transform .3s}
+.wide-link:hover{border-color:var(--c-brand)}
+.wide-link:hover i{transform:translateX(4px)}
+
+/* 製品詳細 */
+.pd{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:56px;align-items:center}
+.pd__img{margin:0;background:#fff;border:1px solid var(--c-line-weak)}
+.pd__img img{width:100%;aspect-ratio:1000/693;object-fit:contain;padding:16px}
+.pd__img--photo img{object-fit:cover;padding:0}
+.pd__cat{font-size:12.5px;font-weight:700;letter-spacing:.16em;color:var(--c-brand)}
+.pd__name{margin-top:10px;font-size:clamp(22px,2.4vw,30px);font-weight:700;line-height:1.5;letter-spacing:.04em;color:var(--c-navy)}
+.pd__lead{margin-top:16px;font-size:15.5px;line-height:2;color:var(--c-text-sub)}
+.pd__body{max-width:880px}
+@media (max-width:900px){.pd{grid-template-columns:1fr;gap:24px}}
+.spec-table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+.spec-table th,.spec-table td{padding:15px 18px;border-bottom:1px solid var(--c-line);text-align:left;vertical-align:top;line-height:1.7}
+.spec-table tr:first-child th,.spec-table tr:first-child td{border-top:1px solid var(--c-navy)}
+.spec-table th{width:38%;font-weight:500;color:var(--c-text-sub);background:#F7FAFB}
+.spec-table td{font-weight:500;color:var(--c-navy)}
+@media (max-width:640px){.spec-table th,.spec-table td{display:block;width:auto;padding:10px 4px}.spec-table th{padding-bottom:2px;border-bottom:0;background:none;font-size:13px}.spec-table tr:first-child td{border-top:0}}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.feat__item{padding:24px 26px;background:var(--g-tint);border:1px solid var(--c-line-weak)}
+.feat__item h3{font-size:16px;font-weight:700;color:var(--c-navy)}
+.feat__item ul{margin-top:12px;display:grid;gap:8px}
+.feat__item li,.points li{position:relative;padding-left:18px;font-size:14.5px;line-height:1.85;color:var(--c-text)}
+.feat__item li::before,.points li::before{content:"";position:absolute;left:0;top:.85em;width:8px;height:1px;background:var(--c-brand)}
+@media (max-width:767px){.feat{grid-template-columns:1fr}}
+.points{display:grid;gap:10px}
+.use{font-size:15.5px;color:var(--c-navy);font-weight:500}
+.ask{padding:28px 30px;background:var(--g-tint);border:1px solid var(--c-line-weak);font-size:15.5px;color:var(--c-navy)}
+.sheet-link{margin-top:32px}
+.sheet-link a{font-size:14px;font-weight:700;color:var(--c-brand-dk);border-bottom:1px solid var(--c-brand-lt);padding-bottom:3px}
+
+/* EMS */
+.ems{display:grid;gap:20px}
+.ems-sec{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;padding:36px 40px;background:#fff;border:1px solid var(--c-line-weak)}
+.ems-sec:nth-child(odd){background:var(--g-tint)}
+.ems-sec__en{font-size:11.5px;font-weight:700;letter-spacing:.2em;color:var(--c-brand)}
+.ems-sec__head h2{margin-top:10px;font-size:21px;font-weight:700;line-height:1.55;color:var(--c-navy)}
+.ems-sec__head p:last-child{margin-top:14px;font-size:14.5px;line-height:2;color:var(--c-text-sub)}
+.ems-sec__items{display:grid;gap:0;border-top:1px solid var(--c-line)}
+.ems-sec__items div{padding:16px 0;border-bottom:1px solid var(--c-line)}
+.ems-sec__items dt{font-size:15px;font-weight:700;color:var(--c-navy)}
+.ems-sec__items dd{margin:6px 0 0;font-size:14px;line-height:1.95;color:var(--c-text-sub)}
+@media (max-width:900px){.ems-sec{grid-template-columns:1fr;gap:20px;padding:26px 20px}}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.gallery a{display:block;border:1px solid var(--c-line-weak);background:#fff;transition:border-color .3s,transform .3s var(--ease)}
+.gallery a:hover{border-color:var(--c-brand);transform:translateY(-3px)}
+.gallery img{width:100%;aspect-ratio:1920/1302;object-fit:cover}
+@media (max-width:767px){.gallery{grid-template-columns:1fr 1fr;gap:10px}}
+
+/* アプリケーション領域 */
+.apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.app-card{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid var(--c-line-weak);transition:transform .3s var(--ease),box-shadow .3s}
+.app-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(11,31,51,.25)}
+.app-card__img{aspect-ratio:16/10;overflow:hidden}
+.app-card__img img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease)}
+.app-card:hover .app-card__img img{transform:scale(1.04)}
+.app-card__body{padding:4px 22px 24px}
+.app-card h3{margin:6px 0 12px;font-size:16.5px;font-weight:700;line-height:1.6;color:var(--c-navy)}
+@media (max-width:900px){.apps{grid-template-columns:1fr;gap:20px}}
+.app-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:48px}
+.app-items div{padding:22px 24px;background:var(--g-tint);border:1px solid var(--c-line-weak)}
+.app-items dt{font-size:16px;font-weight:700;color:var(--c-navy)}
+.app-items dd{margin:8px 0 0;font-size:14px;line-height:1.85;color:var(--c-text-sub)}
+@media (max-width:767px){.app-items{grid-template-columns:1fr}}
+.app-fig{margin:40px 0 0}
+.app-fig img{width:100%;border:1px solid var(--c-line-weak)}
+.app-fig figcaption{margin-top:8px;font-size:12.5px;color:var(--c-text-mute)}
+
+/* 会社概要・企業紹介・沿革・お問い合わせ */
+.ptable{width:100%;max-width:960px;border-collapse:collapse;font-size:15.5px}
+.ptable th,.ptable td{padding:22px 20px;border-bottom:1px solid var(--c-line);text-align:left;vertical-align:top;line-height:1.9}
+.ptable tr:first-child th,.ptable tr:first-child td{border-top:1px solid var(--c-navy)}
+.ptable th{width:200px;font-weight:700;color:var(--c-navy);letter-spacing:.06em}
+.ptable td{color:var(--c-text)}
+.ptable small{font-size:13px;color:var(--c-text-mute)}
+@media (max-width:640px){.ptable th,.ptable td{display:block;width:auto;padding:14px 4px}.ptable th{padding-bottom:0;border-bottom:0;font-size:13.5px}.ptable tr:first-child td{border-top:0}}
+.mvv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.mvv__item{padding:34px 30px;background:var(--g-navy);color:#fff}
+.mvv__en{font-size:11.5px;font-weight:700;letter-spacing:.26em;color:var(--c-brand-lt)}
+.mvv__item h2{margin-top:10px;font-size:15px;font-weight:700;letter-spacing:.1em;color:#C9D6E0}
+.mvv__txt{margin-top:16px;font-family:var(--ff-mincho);font-size:20px;font-weight:600;line-height:1.8;letter-spacing:.06em;color:#fff}
+.mvv__list{margin-top:16px;display:grid;gap:8px;font-family:var(--ff-mincho);font-size:17px;font-weight:600;line-height:1.7}
+@media (max-width:900px){.mvv{grid-template-columns:1fr}}
+.about-biz{max-width:880px}
+.about-biz p{font-size:15.5px;line-height:2.1;color:var(--c-text-sub)}
+.about-biz p+p{margin-top:12px}
+.bases{display:grid;border-top:1px solid var(--c-navy)}
+.bases div{display:grid;grid-template-columns:120px minmax(0,1fr);padding:16px 0;border-bottom:1px solid var(--c-line)}
+.bases dt{font-weight:700;color:var(--c-navy)}
+.bases dd{margin:0;color:var(--c-text)}
+.tl{display:grid;gap:56px;max-width:960px}
+.tl__year h2{display:flex;align-items:center;gap:16px;margin-bottom:8px;font-size:20px;font-weight:700;letter-spacing:.06em;color:var(--c-navy)}
+.tl__year h2::after{content:"";flex:1;height:1px;background:var(--c-line)}
+.tl ol{margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:20px;padding:16px 0;border-bottom:1px solid var(--c-line-weak)}
+.tl time{font-weight:700;color:var(--c-brand-dk);font-variant-numeric:tabular-nums}
+.tl p{font-size:15px;line-height:1.95;color:var(--c-text)}
+@media (max-width:640px){.tl li{grid-template-columns:52px minmax(0,1fr);gap:12px}.tl p{font-size:14.5px}}
+.cinfo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:48px;align-items:start}
+.cinfo__tel{padding:40px 36px;background:var(--g-navy);color:#fff}
+.cinfo__label{font-size:14px;font-weight:700;color:var(--c-brand-lt);letter-spacing:.1em}
+.cinfo__num{display:inline-block;margin-top:10px;font:700 clamp(30px,3.4vw,40px)/1.3 var(--ff-en);letter-spacing:.04em;color:#fff;font-variant-numeric:tabular-nums}
+.cinfo__note{margin-top:16px;font-size:14px;line-height:1.95;color:#C9D6E0}
+.cinfo__list{display:grid;border-top:1px solid var(--c-navy)}
+.cinfo__list div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;padding:20px 0;border-bottom:1px solid var(--c-line)}
+.cinfo__list dt{font-weight:700;color:var(--c-navy)}
+.cinfo__list dd{margin:0;line-height:1.9}
+.cinfo__list dd a:not(.card-link){color:var(--c-navy);font-weight:700}
+@media (max-width:900px){.cinfo{grid-template-columns:1fr;gap:28px}.cinfo__tel{padding:28px 22px}.cinfo__list div{grid-template-columns:1fr;gap:4px}}
+.others{display:grid;border-top:1px solid var(--c-line)}
+.others li{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--c-line-weak);font-size:14.5px}
+.others a{color:var(--c-navy);font-weight:500}
+.others a:hover{color:var(--c-brand)}
+.others time{flex:none;color:var(--c-text-mute);font-size:13px;font-variant-numeric:tabular-nums}
+.article .prose h2{font-size:19px}
+
+/* フェードイン（JSが動く環境のみ） */
+@media (prefers-reduced-motion:no-preference){
+  .rv{opacity:0;transform:translateY(16px);transition:opacity .85s var(--ease),transform .85s var(--ease)}
+  .rv.is-in{opacity:1;transform:none}
+}
+
+/* ---------- ヘッダー：PC幅が狭いときに項目が折り返さないように ---------- */
+.gnav__link{white-space:nowrap}
+@media (max-width:1366px) and (min-width:1081px){
+  .gnav{padding-left:20px}
+  .gnav__link{padding:0 12px;font-size:14px;letter-spacing:.06em}
+  .gnav__menu li.is-current>.gnav__link::after{left:12px;right:12px}
+  .gnav__cta a{min-width:auto;padding:18px 22px;font-size:14px}
+  .lang{margin-left:12px}
+  .lang button{padding:0 9px}
+  .lang__label-pc{display:none}
+  .lang__label-sp{display:inline}
+}
+
+/* ---------- 写真のない記事のサムネイル ---------- */
+.post-card__noimg{position:relative;flex-direction:column;gap:10px;background:var(--g-navy);font-size:11px;letter-spacing:.32em;color:var(--c-brand-lt);overflow:hidden}
+.post-card__noimg::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(159,211,218,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(159,211,218,.07) 1px,transparent 1px);background-size:32px 32px}
+.post-card__noimg b{position:relative;font:600 15px/1.4 var(--ff-mincho);letter-spacing:.14em;color:#fff}
+.post-card__noimg span{position:relative}
