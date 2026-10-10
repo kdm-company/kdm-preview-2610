@@ -313,9 +313,9 @@ body{overflow-x:clip}
 .page-head .wrap{position:relative;z-index:2}
 .ph-glow{position:absolute;inset:-20%;z-index:0;pointer-events:none;filter:blur(60px)}
 .ph-glow span{position:absolute;border-radius:50%;mix-blend-mode:screen}
-.ph-glow span:nth-child(1){left:46%;top:-10%;width:56%;height:80%;background:radial-gradient(closest-side,#1A9CB0 0%,rgba(26,156,176,.55) 40%,transparent 72%);animation:phDr1 22s ease-in-out infinite}
-.ph-glow span:nth-child(2){left:4%;top:30%;width:50%;height:80%;background:radial-gradient(closest-side,#2E6BB8 0%,rgba(46,107,184,.5) 40%,transparent 72%);animation:phDr2 27s ease-in-out infinite}
-.ph-glow span:nth-child(3){left:70%;top:40%;width:30%;height:50%;background:radial-gradient(closest-side,#D9963A 0%,rgba(217,150,58,.4) 40%,transparent 72%);animation:phDr3 31s ease-in-out infinite}
+.ph-glow span:nth-child(1){left:46%;top:-10%;width:56%;height:80%;background:radial-gradient(closest-side,#1A9CB0 0%,rgba(26,156,176,.55) 40%,transparent 72%);animation:phDr1 36s ease-in-out infinite}
+.ph-glow span:nth-child(2){left:4%;top:30%;width:50%;height:80%;background:radial-gradient(closest-side,#2E6BB8 0%,rgba(46,107,184,.5) 40%,transparent 72%);animation:phDr2 44s ease-in-out infinite}
+.ph-glow span:nth-child(3){left:70%;top:40%;width:30%;height:50%;background:radial-gradient(closest-side,#D9963A 0%,rgba(217,150,58,.4) 40%,transparent 72%);animation:phDr3 50s ease-in-out infinite}
 @keyframes phDr1{50%{transform:translate(-6%,6%) scale(1.08)}}
 @keyframes phDr2{50%{transform:translate(7%,-5%) scale(1.06)}}
 @keyframes phDr3{50%{transform:translate(-8%,-6%) scale(.92)}}
