@@ -16,6 +16,8 @@
       gnav.classList.toggle('is-open', open);
       burger.classList.toggle('is-open', open);
       burger.setAttribute('aria-expanded', String(open));
+      const label = burger.querySelector('.burger__label');
+      if (label) label.textContent = open ? 'CLOSE' : 'MENU';
       document.documentElement.classList.toggle('is-menu-open', open);
       document.body.classList.toggle('is-menu-open', open);
     };
