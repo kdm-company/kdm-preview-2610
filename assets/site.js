@@ -85,11 +85,12 @@
   }
 })();
 
-/* 下層ページの見出し帯：地形の等高線
-   漂う光（CSS）の上に、立体に見える等高線を重ねる。
-   ・斜面の向きと光の向きで線の明るさを変える（光の当たる斜面は明るく、陰は暗く）。5本ごとの主曲線は太く
-   ・地形はごくゆっくり形を変え、光の向きも数分かけて一周する。動いていると気づかない程度の速さに抑える
-   ・マウスを置くと、その場所の地面がわずかに盛り上がる（ゆっくり追従）
+/* 下層ページの見出し帯：エネルギーの粒
+   漂う光（CSS）の上に、ゆっくり右へ流れる光の粒を重ねる。
+   ・粒は遠・中・近の3つの奥行き。遠いほど小さく淡く、近いほど大きくやわらかくぼける
+   ・まっすぐではなく、ゆるやかな気流に乗って波打ちながら進む。速さは気づかない程度に抑える
+   ・ときどき混じる太陽色の粒は、短い光の尾を引く
+   ・マウスを近づけると、粒がゆっくりよける
    見出し側（左）は CSS のマスクで消す。画面外では止め、動きを減らす設定では静止画にする */
 (() => {
   const hero = document.querySelector('.page-head');
@@ -99,63 +100,57 @@
   cv.className = 'ph-canvas'; cv.setAttribute('aria-hidden', 'true');
   hero.insertBefore(cv, hero.querySelector('.wrap'));
   const c = cv.getContext('2d');
-  const m = { on: false, px: 0, py: 0 };
-  let W = 0, H = 0, raf = 0, vis = true, frame = 0, bx = -1, by = -1, bh = 0;
+  const m = { px: -999, py: -999 };
+  let W = 0, H = 0, ps = [], raf = 0, vis = true, last = 0;
 
+  const spawn = (anywhere) => {
+    const z = Math.random() < 0.55 ? 0.25 + Math.random() * 0.25 : Math.random() < 0.75 ? 0.55 + Math.random() * 0.25 : 0.85 + Math.random() * 0.15;
+    return { x: anywhere ? Math.random() * W : -20, y: Math.random() * H, z, r: 0.5 + z * 1.7, v: 0.004 + z * 0.009, ph: Math.random() * 6.28, sun: Math.random() < 0.07, ox: 0, oy: 0, tr: [] };
+  };
   const init = () => {
     const d = Math.min(devicePixelRatio || 1, 2);
     W = hero.clientWidth; H = hero.clientHeight;
     cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0);
+    ps = Array.from({ length: Math.round(W * H / (W < 768 ? 2600 : 2400)) }, () => spawn(true));
   };
 
-  const B = 6, S = 8;
-  const at = (a, b, l) => (l - a) / (b - a);
   const draw = (t) => {
-    // 2フレームに1回だけ描き直す（動きが遅いので見た目は変わらない）
-    if (frame++ % 2 === 0 || reduce) {
-      c.clearRect(0, 0, W, H);
-      const T = t * 0.000015, nx = Math.ceil(W / S) + 1, ny = Math.ceil(H / S) + 1, f = new Float32Array(nx * ny);
-      if (m.on) { bx = bx < 0 ? m.px : bx + (m.px - bx) * 0.03; by = by < 0 ? m.py : by + (m.py - by) * 0.03; }
-      bh += ((m.on ? 0.6 : 0) - bh) * 0.02;
-      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-        const x = i * S / 260, y = j * S / 260;
-        let v = Math.sin(x * 1.3 + T * 3) * Math.cos(y * 1.7 - T * 2) + 0.6 * Math.sin(x * 2.1 - y * 1.4 + T * 4 + 1.3)
-          + 0.35 * Math.cos(x * 3.7 + y * 2.9 - T * 5) + 0.5 * Math.cos(Math.hypot(x - 3.2 - Math.sin(T) * 0.4, y - 0.6) * 2.4 - T * 2);
-        if (bh > 0.01) v += bh * Math.exp(-(((i * S - bx) ** 2) + ((j * S - by) ** 2)) / 5200);
-        f[j * nx + i] = v;
-      }
-      const la = 0.6 + t * 0.00003, lx = Math.cos(la), ly = Math.sin(la);
-      const lines = Array.from({ length: B }, () => new Path2D()), main = Array.from({ length: B }, () => new Path2D());
-      for (let L = -2, n = 0; L <= 2.6; L += 0.2, n++) {
-        const set = n % 5 === 0 ? main : lines;
-        for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
-          const a = f[j * nx + i], b = f[j * nx + i + 1], d = f[(j + 1) * nx + i], e = f[(j + 1) * nx + i + 1];
-          const k = (a > L) | ((b > L) << 1) | ((e > L) << 2) | ((d > L) << 3);
-          if (k === 0 || k === 15) continue;
-          const x = i * S, y = j * S, p = [];
-          if ((a > L) !== (b > L)) p.push([x + S * at(a, b, L), y]);
-          if ((b > L) !== (e > L)) p.push([x + S, y + S * at(b, e, L)]);
-          if ((d > L) !== (e > L)) p.push([x + S * at(d, e, L), y + S]);
-          if ((a > L) !== (d > L)) p.push([x, y + S * at(a, d, L)]);
-          const gx = (b - a + e - d) / 2, gy = (d - a + e - b) / 2, gl = Math.hypot(gx, gy) || 1;
-          const q = Math.min(B - 1, Math.floor(Math.max(0, (gx * lx + gy * ly) / gl) * B));
-          set[q].moveTo(p[0][0], p[0][1]); set[q].lineTo(p[1][0], p[1][1]);
-          if (p.length === 4) { set[q].moveTo(p[2][0], p[2][1]); set[q].lineTo(p[3][0], p[3][1]); }
+    const dt = reduce ? 0 : Math.min(48, t - (last || t)); last = t;
+    c.clearRect(0, 0, W, H);
+    const T = t * 0.00004;
+    for (const p of ps) {
+      const vy = (Math.sin(p.x * 0.0045 + T * 2 + p.y * 0.006) + 0.5 * Math.sin(p.x * 0.011 - T * 3)) * 0.004 * p.z;
+      p.x += p.v * dt; p.y += vy * dt; p.ph += dt * 0.0006;
+      if (p.x > W + 20 || p.y < -20 || p.y > H + 20) { Object.assign(p, spawn(false)); continue; }
+      const dx = p.x - m.px, dy = p.y - m.py, dd = Math.hypot(dx, dy), push = dd < 120 ? (1 - dd / 120) ** 2 : 0;
+      p.ox += ((dx / (dd || 1)) * push * 34 * p.z - p.ox) * 0.03; p.oy += ((dy / (dd || 1)) * push * 34 * p.z - p.oy) * 0.03;
+      const x = p.x + p.ox, y = p.y + p.oy;
+      const a = (0.25 + 0.75 * Math.min(1, x / W * 1.4)) * (0.55 + 0.45 * Math.sin(p.ph)) * (0.35 + 0.65 * p.z);
+      if (p.sun) {
+        p.tr.push([x, y]); if (p.tr.length > 40) p.tr.shift();
+        if (p.tr.length > 2) {
+          c.beginPath(); c.moveTo(p.tr[0][0], p.tr[0][1]); for (const q of p.tr) c.lineTo(q[0], q[1]);
+          const g = c.createLinearGradient(p.tr[0][0], p.tr[0][1], x, y);
+          g.addColorStop(0, 'rgba(232,162,58,0)'); g.addColorStop(1, `rgba(240,180,90,${a * 0.6})`);
+          c.strokeStyle = g; c.lineWidth = p.r * 0.9; c.lineCap = 'round'; c.stroke();
         }
       }
-      for (let q = 0; q < B; q++) {
-        const k = q / (B - 1);
-        c.strokeStyle = `rgba(206,236,240,${0.09 + k * 0.3})`; c.lineWidth = 0.75; c.stroke(lines[q]);
-        c.strokeStyle = `rgba(${Math.round(206 + 38 * k * 0.5)},${Math.round(236 - 22 * k * 0.5)},${Math.round(240 - 80 * k * 0.5)},${0.2 + k * 0.5})`;
-        c.lineWidth = 1.2; c.stroke(main[q]);
+      const col = p.sun ? '240,180,90' : '170,222,230';
+      if (p.z > 0.85) { // 手前の粒はやわらかくぼかす
+        const g = c.createRadialGradient(x, y, 0, x, y, p.r * 3.4);
+        g.addColorStop(0, `rgba(${col},${a * 0.45})`); g.addColorStop(1, `rgba(${col},0)`);
+        c.fillStyle = g; c.beginPath(); c.arc(x, y, p.r * 3.4, 0, 6.283); c.fill();
+      } else {
+        c.fillStyle = `rgba(${col},${a * 0.22})`; c.beginPath(); c.arc(x, y, p.r * 2.8, 0, 6.283); c.fill();
+        c.fillStyle = `rgba(${p.sun ? '255,226,170' : '236,250,252'},${Math.min(1, a * 1.3)})`; c.beginPath(); c.arc(x, y, p.r * 0.75, 0, 6.283); c.fill();
       }
     }
     if (!reduce && vis) raf = requestAnimationFrame(draw);
   };
-  const start = () => { if (reduce) return; cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); };
+  const start = () => { if (reduce) return; cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(draw); };
 
-  hero.addEventListener('pointermove', (e) => { const r = hero.getBoundingClientRect(); m.on = true; m.px = e.clientX - r.left; m.py = e.clientY - r.top; });
-  hero.addEventListener('pointerleave', () => { m.on = false; });
+  hero.addEventListener('pointermove', (e) => { const r = hero.getBoundingClientRect(); m.px = e.clientX - r.left; m.py = e.clientY - r.top; });
+  hero.addEventListener('pointerleave', () => { m.px = m.py = -999; });
   new IntersectionObserver((en) => { vis = en[0].isIntersecting; if (vis) start(); }).observe(hero);
   let rt = 0;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (hero.clientWidth === W && hero.clientHeight === H) return; init(); if (reduce) draw(0); }, 150); });
