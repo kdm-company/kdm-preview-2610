@@ -86,10 +86,11 @@
 })();
 
 /* 下層ページの見出し帯
-   漂う光（CSS）の上に、1枚の canvas で三層を重ねる。
-   ・等高線：用地・地域。なだらかな起伏の等高線がごくゆっくり形を変える（3フレームに1回だけ描き直す）
-   ・パネル：真上から見た発電所。日差しの帯が横切り、当たったセルが少しずつずれて光る。光の色は朝の琥珀→昼の白→夕方の琥珀
-   ・エネルギーの粒：右へ流れ、日差しの帯を通るときだけ同じ色に灯る。マウスを近づけると粒がよける
+   「土地・発電・エネルギー」を一つの絵にする。
+   ・土地：丘の等高線。輪の形がごくゆっくり変わる
+   ・発電：南向きの斜面に、等高線に沿ってパネルを段々に並べる（斜面に建つ実際の発電所と同じ並べ方）
+   ・日差し：帯を横切り、当たったセルが少しずつずれて光る。色は朝の琥珀→昼の白→夕方の琥珀
+   ・エネルギー：光ったセルから粒が生まれ、そのパネル列（＝等高線）に沿って流れて消える
    見出し側（左）は CSS のマスクで消す。画面外では止め、動きを減らす設定では静止画にする */
 (() => {
   const hero = document.querySelector('.page-head');
@@ -98,104 +99,99 @@
   const cv = document.createElement('canvas');
   cv.className = 'ph-canvas'; cv.setAttribute('aria-hidden', 'true');
   hero.insertBefore(cv, hero.querySelector('.wrap'));
-  const c = cv.getContext('2d'), topo = document.createElement('canvas'), tc = topo.getContext('2d');
-  const AMBER = [232, 168, 80], NOON = [214, 242, 246], BASE = [233, 251, 253];
+  const c = cv.getContext('2d');
+  const AMBER = [232, 168, 80], NOON = [214, 242, 246], TEAL = [159, 211, 218];
   const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
   const m = { x: null, px: -999, py: -999 };
-  let W = 0, H = 0, mob = false, ps = [], rnd = null, raf = 0, vis = true, last = 0, frame = 0, s = 0.7;
+  let W = 0, H = 0, mob = false, G = null, rings = [], ps = [], raf = 0, vis = true, last = 0, s = 0.7, T = 0;
 
+  // 丘の形：中心・横長の比率・等高線の間隔
   const init = () => {
     const d = Math.min(devicePixelRatio || 1, 2);
     W = hero.clientWidth; H = hero.clientHeight; mob = W < 768;
-    for (const [el, ctx] of [[cv, c], [topo, tc]]) { el.width = W * d; el.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
-    ps = Array.from({ length: Math.round(W * H / (mob ? 3400 : 4000)) }, () => ({
-      x: Math.random() * W, y: Math.random() * H, r: 0.7 + Math.random() * 1.5, v: 0.12 + Math.random() * 0.38, ph: Math.random() * 6.28, ox: 0, oy: 0,
-    }));
-    rnd = new Float32Array(4000).map(() => Math.random());
+    cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0);
+    G = mob
+      ? { cx: W * 0.84, cy: H * 0.26, ex: 1.3, ey: 0.78, step: 13, r0: 14 }
+      : { cx: W * 0.76, cy: H * 0.24, ex: 1.6, ey: 0.8, step: 17, r0: 20 };
+    const far = Math.hypot(W, H) / Math.min(G.ex, G.ey) * 0.8;
+    rings = [];
+    for (let k = 0, r = G.r0; r < far; k++, r += G.step) {
+      // パネルを置くのは中腹の段（1段おき）。外周は等高線だけ
+      const panel = k >= 2 && k % 2 === 0 && r < (mob ? 160 : 240);
+      rings.push({ k, r, panel, seed: k * 12.9898 });
+    }
+    ps = [];
   };
 
-  // 等高線（マーチングスクエア）。起伏の式をゆっくり動かす
-  const contour = (T) => {
-    tc.clearRect(0, 0, W, H);
-    const S = 8, nx = Math.ceil(W / S) + 1, ny = Math.ceil(H / S) + 1, f = new Float32Array(nx * ny);
-    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-      const x = i * S / 260, y = j * S / 260;
-      f[j * nx + i] = Math.sin(x * 1.3 + T * 3) * Math.cos(y * 1.7 - T * 2) + 0.6 * Math.sin(x * 2.1 - y * 1.4 + T * 4 + 1.3)
-        + 0.35 * Math.cos(x * 3.7 + y * 2.9 - T * 5) + 0.5 * Math.cos(Math.hypot(x - 3.2 - Math.sin(T) * 0.4, y - 0.6) * 2.4 - T * 2);
-    }
-    const at = (a, b, l) => (l - a) / (b - a);
-    for (let L = -2, n = 0; L <= 2; L += 0.2, n++) {
-      tc.beginPath();
-      for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
-        const a = f[j * nx + i], b = f[j * nx + i + 1], d = f[(j + 1) * nx + i], e = f[(j + 1) * nx + i + 1];
-        const k = (a > L) | ((b > L) << 1) | ((e > L) << 2) | ((d > L) << 3);
-        if (k === 0 || k === 15) continue;
-        const x = i * S, y = j * S, p = [];
-        if ((a > L) !== (b > L)) p.push([x + S * at(a, b, L), y]);
-        if ((b > L) !== (e > L)) p.push([x + S, y + S * at(b, e, L)]);
-        if ((d > L) !== (e > L)) p.push([x + S * at(d, e, L), y + S]);
-        if ((a > L) !== (d > L)) p.push([x, y + S * at(a, d, L)]);
-        tc.moveTo(p[0][0], p[0][1]); tc.lineTo(p[1][0], p[1][1]);
-        if (p.length === 4) { tc.moveTo(p[2][0], p[2][1]); tc.lineTo(p[3][0], p[3][1]); }
-      }
-      const emph = n % 5 === 0;
-      tc.strokeStyle = emph ? 'rgba(206,236,240,.3)' : 'rgba(206,236,240,.12)';
-      tc.lineWidth = emph ? 1 : 0.7;
-      tc.stroke();
-    }
+  // 等高線 k の角度 th の位置。輪ごとに少しずつ位相をずらして、自然な起伏にする
+  const pos = (ring, th) => {
+    const k = ring.k;
+    const dd = 0.12 * Math.sin(2 * th + T * 1.0 + k * 0.05) + 0.07 * Math.sin(3 * th - T * 0.7 - k * 0.08) + 0.04 * Math.sin(5 * th + T * 1.3 + k * 0.13);
+    const R = ring.r * (1 + dd);
+    return [G.cx + R * Math.cos(th) * G.ex, G.cy + R * Math.sin(th) * G.ey];
   };
-
-  // 日差しの強さ（画面上の位置 0〜1 で判定。少し斜めに傾ける）
   const sun = (x, y) => Math.exp(-((x / W + (y / H - 0.5) * 0.12 - s) ** 2) / 0.02);
-
-  // 真上から見たパネル。帯の右側に、縁がぼける「敷地」として置く
-  const panels = (t, col) => {
-    const cs = mob ? 4 : 5, mw = cs * 10, mh = cs * 6, gap = 2, aisle = mob ? 8 : 12, tableH = mh * 2 + gap;
-    const cx = W * (mob ? 0.86 : 0.75), cy = H * 0.5, ang = -0.16, RC = Math.cos(ang), RS = Math.sin(ang);
-    const cols = Math.max(2, Math.floor(W * (mob ? 0.4 : 0.38) / (mw + gap)));
-    const rows = Math.max(1, Math.round((H * 1.05 + aisle) / (tableH + aisle)));
-    const hw = cols * (mw + gap) / 2, hh = (rows * (tableH + aisle) - aisle) / 2;
-    c.save(); c.translate(cx, cy); c.rotate(ang); c.lineWidth = 0.6;
-    let ci = 0;
-    for (let r = 0; r < rows; r++) for (let mr = 0; mr < 2; mr++) for (let q = 0; q < cols; q++) {
-      const x = -hw + q * (mw + gap), y = -hh + r * (tableH + aisle) + mr * (mh + gap), mx = x + mw / 2, my = y + mh / 2;
-      const edge = Math.min(1, Math.max(0, (1 - Math.max(Math.abs(mx) / hw, Math.abs(my) / hh)) / 0.3));
-      ci += 60;
-      if (edge <= 0) continue;
-      c.fillStyle = `rgba(8,26,44,${0.38 * edge})`; c.fillRect(x, y, mw, mh);
-      c.strokeStyle = `rgba(206,236,240,${0.2 * edge})`; c.strokeRect(x + 0.5, y + 0.5, mw - 1, mh - 1);
-      const sx = cx + mx * RC - my * RS, sy = cy + mx * RS + my * RC;
-      if (sun(sx, sy) < 0.01 && sun(sx + mw, sy) < 0.01 && sun(sx - mw, sy) < 0.01) continue;
-      for (let j = 0; j < 6; j++) for (let i = 0; i < 10; i++) {
-        const L = sun(sx + (i - 4.5) * cs * RC, sy + (i - 4.5) * cs * RS);
-        if (L < 0.03) continue;
-        const sh = 0.55 + 0.45 * Math.sin(t * 0.0011 + rnd[(ci + j * 10 + i) % 4000] * 6.283);
-        c.fillStyle = `rgba(${col},${L * sh * (mob ? 0.36 : 0.52) * edge})`;
-        c.fillRect(x + i * cs + 0.6, y + j * cs + 0.6, cs - 1.2, cs - 1.2);
-      }
-    }
-    c.restore();
-  };
 
   const draw = (t) => {
     const dt = Math.min(48, t - (last || t)); last = t;
-    if (frame++ % 3 === 0) contour(t * 0.000045);
+    T = t * 0.00004;
     c.clearRect(0, 0, W, H);
-    c.drawImage(topo, 0, 0, W, H);
-    // 日差しは約40秒で敷地を横切る。マウスがあればその位置へゆっくり寄せる
-    const target = m.x ?? (0.3 + ((t * 0.000022) % 0.9));
+    const target = m.x ?? (0.35 + ((t * 0.000022) % 0.9));
     s = Math.abs(target - s) > 0.5 ? target : s + (target - s) * 0.04;
-    const k = Math.min(1, Math.max(0, (s - 0.45) / 0.6)), lit = mix(AMBER, NOON, Math.sin(k * Math.PI));
-    panels(t, lit.join(','));
-    for (const p of ps) {
-      if (!reduce) { p.x += p.v * dt * 0.06; p.ph += dt * 0.002; if (p.x > W + 10) { p.x = -10; p.y = Math.random() * H; } }
-      const dx = p.x - m.px, dy = p.y - m.py, dd = Math.hypot(dx, dy), push = dd < 110 ? (110 - dd) / 110 : 0;
-      p.ox += ((dx / (dd || 1)) * push * 28 - p.ox) * 0.08; p.oy += ((dy / (dd || 1)) * push * 28 - p.oy) * 0.08;
-      const x = p.x + p.ox, y = p.y + p.oy + Math.sin(p.ph) * 3, L = sun(x, y);
-      const a = (0.3 + 0.5 * x / W) * (0.6 + 0.4 * Math.sin(p.ph)) * (1 + L * 0.6);
-      const glow = mix([159, 211, 218], lit, L).join(','), core = mix(BASE, lit, L).join(',');
-      c.fillStyle = `rgba(${glow},${a * 0.25})`; c.beginPath(); c.arc(x, y, p.r * 3.2, 0, 6.283); c.fill();
-      c.fillStyle = `rgba(${core},${Math.min(1, a)})`; c.beginPath(); c.arc(x, y, p.r, 0, 6.283); c.fill();
+    const kk = Math.min(1, Math.max(0, (s - 0.45) / 0.6)), lit = mix(AMBER, NOON, Math.sin(kk * Math.PI)), litS = lit.join(',');
+
+    // 等高線
+    for (const ring of rings) {
+      const n = Math.max(48, Math.round(ring.r * 0.7));
+      c.beginPath();
+      for (let i = 0; i <= n; i++) { const p = pos(ring, (i / n) * 6.2832); i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); }
+      const emph = ring.k % 5 === 0;
+      c.strokeStyle = emph ? 'rgba(206,236,240,.26)' : 'rgba(206,236,240,.11)';
+      c.lineWidth = emph ? 0.9 : 0.6;
+      c.stroke();
+    }
+
+    // パネル：南向き（下側）の斜面だけ、等高線に沿ってセルを並べる。8枚ごとに少し間をあける
+    const cl = mob ? 5 : 6, cw = mob ? 4 : 5, gap = 1.2;
+    const base = new Path2D();
+    for (const ring of rings) {
+      if (!ring.panel) continue;
+      const rr = ring.r * (G.ex + G.ey) / 2, dth = (cl + gap) / rr;
+      let idx = 0;
+      for (let th = 0.25; th < Math.PI - 0.25; th += dth, idx++) {
+        if (idx % 9 === 8) continue;
+        const p = pos(ring, th), q = pos(ring, th + 0.002);
+        const a = Math.atan2(q[1] - p[1], q[0] - p[0]), ca = Math.cos(a), sa = Math.sin(a);
+        const hx = ca * cl / 2, hy = sa * cl / 2, vx = -sa * cw / 2, vy = ca * cw / 2;
+        const quad = (path) => { path.moveTo(p[0] - hx - vx, p[1] - hy - vy); path.lineTo(p[0] + hx - vx, p[1] + hy - vy); path.lineTo(p[0] + hx + vx, p[1] + hy + vy); path.lineTo(p[0] - hx + vx, p[1] - hy + vy); path.closePath(); };
+        quad(base);
+        const L = sun(p[0], p[1]);
+        if (L < 0.03) continue;
+        const ph = Math.sin(ring.seed * idx * 0.7) * 43758.5453, rnd = ph - Math.floor(ph);
+        const sh = 0.55 + 0.45 * Math.sin(t * 0.0011 + rnd * 6.283);
+        c.beginPath(); quad(c);
+        c.fillStyle = `rgba(${litS},${L * sh * (mob ? 0.6 : 0.75)})`; c.fill();
+        // 光ったセルからエネルギーの粒が生まれる
+        if (!reduce && ps.length < (mob ? 28 : 56) && Math.random() < L * sh * dt * 0.00012) {
+          ps.push({ ring, th, dir: Math.random() < 0.5 ? -1 : 1, sp: (0.018 + Math.random() * 0.02) / rr, age: 0, life: 3500 + Math.random() * 3000, r: 0.8 + Math.random() * 1.2, col: lit, ox: 0, oy: 0 });
+        }
+      }
+    }
+    c.fillStyle = 'rgba(160,210,224,.2)'; c.fill(base);
+
+    // エネルギーの粒：生まれた列に沿って流れ、やがて消える。マウスの近くはよける
+    for (let i = ps.length - 1; i >= 0; i--) {
+      const p = ps[i];
+      if (!reduce) { p.age += dt; p.th += p.dir * p.sp * dt; }
+      if (p.age > p.life) { ps.splice(i, 1); continue; }
+      const [bx, by] = pos(p.ring, p.th);
+      const dx = bx - m.px, dy = by - m.py, dd = Math.hypot(dx, dy), push = dd < 100 ? (100 - dd) / 100 : 0;
+      p.ox += ((dx / (dd || 1)) * push * 22 - p.ox) * 0.08; p.oy += ((dy / (dd || 1)) * push * 22 - p.oy) * 0.08;
+      const x = bx + p.ox, y = by + p.oy;
+      const life = Math.min(1, p.age / 500, (p.life - p.age) / 1200);
+      const col = mix(TEAL, p.col, Math.max(0.25, 1 - p.age / p.life)).join(',');
+      c.fillStyle = `rgba(${col},${life * 0.22})`; c.beginPath(); c.arc(x, y, p.r * 3.4, 0, 6.283); c.fill();
+      c.fillStyle = `rgba(255,250,238,${life * 0.9})`; c.beginPath(); c.arc(x, y, p.r, 0, 6.283); c.fill();
     }
     if (!reduce && vis) raf = requestAnimationFrame(draw);
   };
@@ -208,7 +204,7 @@
   hero.addEventListener('pointerleave', () => { m.x = null; m.px = m.py = -999; });
   new IntersectionObserver((en) => { vis = en[0].isIntersecting; if (vis) start(); }).observe(hero);
   let rt = 0;
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (hero.clientWidth === W && hero.clientHeight === H) return; init(); frame = 0; if (reduce) draw(0); }, 150); });
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (hero.clientWidth === W && hero.clientHeight === H) return; init(); if (reduce) draw(0); }, 150); });
   init();
   if (reduce) draw(0); else start();
 })();
